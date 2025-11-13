@@ -44,7 +44,7 @@ jobs:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USER }}
         key: ${{ secrets.SSH_KEY }}
-        source: "./docker-compose.yml"
+        source: "./docker-compose.vps.yml"
         target: "/opt/minidiscordgateway/"
 
     - name: Deploy on VPS over SSH
@@ -56,6 +56,9 @@ jobs:
         script: |
           mkdir -p /opt/minidiscordgateway
           cd /opt/minidiscordgateway
+          
+          # Rename the VPS compose file
+          mv docker-compose.vps.yml docker-compose.yml
           
           # Create .env if it doesn't exist
           if [ ! -f .env ]; then
