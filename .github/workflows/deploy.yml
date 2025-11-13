@@ -5,6 +5,10 @@ on:
     branches: [ "master" ]
   workflow_dispatch:
 
+permissions:
+  packages: write
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
