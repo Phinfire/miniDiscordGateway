@@ -54,7 +54,18 @@ jobs:
         username: ${{ secrets.SSH_USER }}
         key: ${{ secrets.SSH_KEY }}
         script: |
+          mkdir -p /opt/minidiscordgateway
           cd /opt/minidiscordgateway
+          
+          # Create .env if it doesn't exist
+          if [ ! -f .env ]; then
+            cat > .env << EOF
+          DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }}
+          API_PORT=${{ secrets.API_PORT || 8000 }}
+          EOF
+          fi
+          
+          # Pull latest image and deploy
           docker compose pull
           docker compose up -d --remove-orphans
           docker system prune -f
