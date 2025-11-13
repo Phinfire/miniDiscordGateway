@@ -1,0 +1,46 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build & Push Docker image
+      run: |
+        docker build -t ghcr.io/${{ github.repository_owner }}/minidiscordgateway:latest .
+        docker push ghcr.io/${{ github.repository_owner }}/minidiscordgateway:latest
+
+    - name: Copy compose file to VPS
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_KEY }}
+        source: "./docker-compose.yml"
+        target: "/opt/minidiscordgateway/"
+
+    - name: Deploy on VPS over SSH
+      uses: appleboy/ssh-action@v0.1.7
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_KEY }}
+        script: |
+          cd /opt/minidiscordgateway
+          docker compose pull
+          docker compose up -d --remove-orphans
+          docker system prune -f
